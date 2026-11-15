@@ -1,0 +1,136 @@
+COVERGROUP COVERAGE:
+----------------------------------------------------------------------------------------------------------
+Covergroup                                             Metric       Goal    Status               
+                                                                                                         
+----------------------------------------------------------------------------------------------------------
+ TYPE /tb_pkg/tb_coverage/message_cg                  100.00%        100    Covered              
+    covered/total bins:                                    19         19                      
+    missing/total bins:                                     0         19                      
+    % Hit:                                            100.00%        100                      
+    Cross cx_length_blocks                            100.00%        100    Covered              
+        covered/total bins:                                 9          9                      
+        missing/total bins:                                 0          9                      
+        % Hit:                                        100.00%        100                      
+        Illegal and Ignore Bins:
+            ignore_bin multi_one                            0               ZERO                 
+            ignore_bin single_large                         0               ZERO                 
+            ignore_bin small_multi                          0               ZERO                 
+ Covergroup instance \/tb_pkg::tb_coverage::message_cg  
+                                                      100.00%        100    Covered              
+    covered/total bins:                                    19         19                      
+    missing/total bins:                                     0         19                      
+    % Hit:                                            100.00%        100                      
+    Cross cx_length_blocks                            100.00%        100    Covered              
+        covered/total bins:                                 9          9                      
+        missing/total bins:                                 0          9                      
+        % Hit:                                        100.00%        100                      
+        Illegal and Ignore Bins:
+            ignore_bin multi_one                            0               ZERO                 
+            ignore_bin single_large                         0               ZERO                 
+            ignore_bin small_multi                          0               ZERO                 
+ TYPE /tb_pkg/tb_coverage/padding_cg                  100.00%        100    Covered              
+    covered/total bins:                                    47         47                      
+    missing/total bins:                                     0         47                      
+    % Hit:                                            100.00%        100                      
+    Cross cx_alignment_remainder                      100.00%        100    Covered              
+        covered/total bins:                                26         26                      
+        missing/total bins:                                 0         26                      
+        % Hit:                                        100.00%        100                      
+        Illegal and Ignore Bins:
+            ignore_bin rem511_nonseven                      0               ZERO                 
+            ignore_bin rem0_nonzero                         0               ZERO                 
+ Covergroup instance \/tb_pkg::tb_coverage::padding_cg  
+                                                      100.00%        100    Covered              
+    covered/total bins:                                    47         47                      
+    missing/total bins:                                     0         47                      
+    % Hit:                                            100.00%        100                      
+    Cross cx_alignment_remainder                      100.00%        100    Covered              
+        covered/total bins:                                26         26                      
+        missing/total bins:                                 0         26                      
+        % Hit:                                        100.00%        100                      
+        Illegal and Ignore Bins:
+            ignore_bin rem511_nonseven                      0               ZERO                 
+            ignore_bin rem0_nonzero                         0               ZERO                 
+ TYPE /tb_pkg/tb_coverage/input_protocol_cg           100.00%        100    Covered              
+    covered/total bins:                                    17         17                      
+    missing/total bins:                                     0         17                      
+    % Hit:                                            100.00%        100                      
+    Coverpoint cp_stall_position                      100.00%        100    Covered              
+        covered/total bins:                                 2          2                      
+        missing/total bins:                                 0          2                      
+        % Hit:                                        100.00%        100                      
+        ignore_bin start_stall_unreachable                  0               ZERO                 
+    Coverpoint cp_stall_size                          100.00%        100    Covered              
+        covered/total bins:                                 2          2                      
+        missing/total bins:                                 0          2                      
+        % Hit:                                        100.00%        100                      
+        ignore_bin one_block_stall_unreachable              0               ZERO                 
+ Covergroup instance \/tb_pkg::tb_coverage::input_protocol_cg  
+                                                      100.00%        100    Covered              
+    covered/total bins:                                    17         17                      
+    missing/total bins:                                     0         17                      
+    % Hit:                                            100.00%        100                      
+    Coverpoint cp_stall_position                      100.00%        100    Covered              
+        covered/total bins:                                 2          2                      
+        missing/total bins:                                 0          2                      
+        % Hit:                                        100.00%        100                      
+        ignore_bin start_stall_unreachable                  0               ZERO                 
+    Coverpoint cp_stall_size                          100.00%        100    Covered              
+        covered/total bins:                                 2          2                      
+        missing/total bins:                                 0          2                      
+        % Hit:                                        100.00%        100                      
+        ignore_bin one_block_stall_unreachable              0               ZERO                 
+ TYPE /tb_pkg/tb_coverage/output_protocol_cg          100.00%        100    Covered              
+    covered/total bins:                                     5          5                      
+    missing/total bins:                                     0          5                      
+    % Hit:                                            100.00%        100                      
+    Coverpoint cp_valid_done                          100.00%        100    Covered              
+        covered/total bins:                                 2          2                      
+        missing/total bins:                                 0          2                      
+        % Hit:                                        100.00%        100                      
+        ignore_bin mismatch                                 0               ZERO                 
+ Covergroup instance \/tb_pkg::tb_coverage::output_protocol_cg  
+                                                      100.00%        100    Covered              
+    covered/total bins:                                     5          5                      
+    missing/total bins:                                     0          5                      
+    % Hit:                                            100.00%        100                      
+    Coverpoint cp_valid_done                          100.00%        100    Covered              
+        covered/total bins:                                 2          2                      
+        missing/total bins:                                 0          2                      
+        % Hit:                                        100.00%        100                      
+        ignore_bin mismatch                                 0               ZERO                 
+ TYPE /tb_pkg/tb_coverage/reset_control_cg            100.00%        100    Covered              
+    covered/total bins:                                    19         19                      
+    missing/total bins:                                     0         19                      
+    % Hit:                                            100.00%        100                      
+    Coverpoint cp_start_relation                      100.00%        100    Covered              
+        covered/total bins:                                 3          3                      
+        missing/total bins:                                 0          3                      
+        % Hit:                                        100.00%        100                      
+        illegal_bin start_while_busy                        0               ZERO                 
+        ignore_bin idle_not_ready                           0               ZERO                 
+    Cross cx_reset_context                            100.00%        100    Covered              
+        covered/total bins:                                 4          4                      
+        missing/total bins:                                 0          4                      
+        % Hit:                                        100.00%        100                      
+        Illegal and Ignore Bins:
+            ignore_bin powerup_other                        0               ZERO                 
+ Covergroup instance \/tb_pkg::tb_coverage::reset_control_cg  
+                                                      100.00%        100    Covered              
+    covered/total bins:                                    19         19                      
+    missing/total bins:                                     0         19                      
+    % Hit:                                            100.00%        100                      
+    Coverpoint cp_start_relation                      100.00%        100    Covered              
+        covered/total bins:                                 3          3                      
+        missing/total bins:                                 0          3                      
+        % Hit:                                        100.00%        100                      
+        illegal_bin start_while_busy                        0               ZERO                 
+        ignore_bin idle_not_ready                           0               ZERO                 
+    Cross cx_reset_context                            100.00%        100    Covered              
+        covered/total bins:                                 4          4                      
+        missing/total bins:                                 0          4                      
+        % Hit:                                        100.00%        100                      
+        Illegal and Ignore Bins:
+            ignore_bin powerup_other                        0               ZERO                 
+
+TOTAL COVERGROUP COVERAGE: 100.00%  COVERGROUP TYPES: 5

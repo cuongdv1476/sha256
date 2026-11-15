@@ -1,0 +1,68 @@
+Coverage Report by instance with details
+
+=================================================================================
+=== Instance: /tb_pkg
+=== Design Unit: work.tb_pkg
+=================================================================================
+
+Covergroup Coverage:
+    Covergroups                      1        na        na    99.72%
+        Coverpoints/Crosses         14        na        na        na
+            Covergroup Bins        115       114         1    99.13%
+----------------------------------------------------------------------------------------------------------
+Covergroup                                             Metric       Goal       Bins    Status               
+                                                                                                         
+----------------------------------------------------------------------------------------------------------
+ TYPE /tb_pkg/tb_coverage/sha256_cg                    99.72%        100          -    Uncovered            
+    covered/total bins:                                   114        115          -                      
+    missing/total bins:                                     1        115          -                      
+    % Hit:                                             99.13%        100          -                      
+ Covergroup instance \/tb_pkg::tb_coverage::sha256_cg  
+                                                       99.72%        100          -    Uncovered            
+    covered/total bins:                                   114        115          -                      
+    missing/total bins:                                     1        115          -                      
+    % Hit:                                             99.13%        100          -                      
+    Coverpoint cp_length                               96.15%        100          -    Uncovered            
+        covered/total bins:                                25         26          -                      
+        missing/total bins:                                 1         26          -                      
+        % Hit:                                         96.15%        100          -                      
+        bin two_block_padding_after                         0          1          -    ZERO                 
+    Cross cx_alignment_blocks                         100.00%        100          -    Covered              
+        covered/total bins:                                32         32          -                      
+        missing/total bins:                                 0         32          -                      
+        % Hit:                                        100.00%        100          -                      
+        Auto, Default and User Defined Bins:
+            bin <*,*>                                       0          1         32    ZERO                 
+            bin <*,*>                                       0          1         32    ZERO                 
+
+COVERGROUP COVERAGE:
+----------------------------------------------------------------------------------------------------------
+Covergroup                                             Metric       Goal       Bins    Status               
+                                                                                                         
+----------------------------------------------------------------------------------------------------------
+ TYPE /tb_pkg/tb_coverage/sha256_cg                    99.72%        100          -    Uncovered            
+    covered/total bins:                                   114        115          -                      
+    missing/total bins:                                     1        115          -                      
+    % Hit:                                             99.13%        100          -                      
+ Covergroup instance \/tb_pkg::tb_coverage::sha256_cg  
+                                                       99.72%        100          -    Uncovered            
+    covered/total bins:                                   114        115          -                      
+    missing/total bins:                                     1        115          -                      
+    % Hit:                                             99.13%        100          -                      
+    Coverpoint cp_length                               96.15%        100          -    Uncovered            
+        covered/total bins:                                25         26          -                      
+        missing/total bins:                                 1         26          -                      
+        % Hit:                                         96.15%        100          -                      
+        bin two_block_padding_after                         0          1          -    ZERO                 
+    Cross cx_alignment_blocks                         100.00%        100          -    Covered              
+        covered/total bins:                                32         32          -                      
+        missing/total bins:                                 0         32          -                      
+        % Hit:                                        100.00%        100          -                      
+        Auto, Default and User Defined Bins:
+            bin <*,*>                                       0          1         32    ZERO                 
+            bin <*,*>                                       0          1         32    ZERO                 
+
+TOTAL COVERGROUP COVERAGE: 99.72%  COVERGROUP TYPES: 1
+
+Total Coverage By Instance (filtered view): 99.72%
+

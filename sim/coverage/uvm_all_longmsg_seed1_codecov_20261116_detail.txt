@@ -1,0 +1,282 @@
+Coverage Report by instance with details
+
+=================================================================================
+=== Instance: /tb_sha256/dut/u_sha256_controller/u_block_buffer
+=== Design Unit: work.block_buffer_512
+=================================================================================
+Branch Coverage:
+    Enabled Coverage              Bins      Hits    Misses  Coverage
+    ----------------              ----      ----    ------  --------
+    Branches                        45        44         1    97.77%
+
+================================Branch Details================================
+
+Branch Coverage for instance /tb_sha256/dut/u_sha256_controller/u_block_buffer
+
+    Line         Item                      Count     Source 
+    ----         ----                      -----     ------ 
+  File /home/dang-viet-cuong/Documents/sha256/rtl/block_buffer_512.sv
+------------------------------------CASE Branch------------------------------------
+    164             1                    ***0***     
+Branch totals: 4 hits of 5 branches = 80.00%
+
+
+Toggle Coverage:
+    Enabled Coverage              Bins      Hits    Misses  Coverage
+    ----------------              ----      ----    ------  --------
+    Toggles                        430       324       106    75.34%
+
+================================Toggle Details================================
+
+Toggle Coverage for instance /tb_sha256/dut/u_sha256_controller/u_block_buffer --
+
+                                              Node      1H->0L      0L->1H                          "Coverage"
+                                              ---------------------------------------------------------------
+                                         nextstate               ENUM type       Value       Count 
+                                             state               ENUM type       Value       Count 
+                                total_words[63-59]           0           0                                0.00 
+                                   word_cnt[63-16]           0           0                                0.00 
+
+Total Node Count     =        219 
+Toggled Node Count   =        166 
+Untoggled Node Count =         53 
+
+Toggle Coverage      =      75.34% (324 of 430 bins)
+
+=================================================================================
+=== Instance: /tb_sha256/dut/u_sha256_controller/u_msg_sch
+=== Design Unit: work.message_schedule_generator
+=================================================================================
+Branch Coverage:
+    Enabled Coverage              Bins      Hits    Misses  Coverage
+    ----------------              ----      ----    ------  --------
+    Branches                        15        14         1    93.33%
+
+================================Branch Details================================
+
+Branch Coverage for instance /tb_sha256/dut/u_sha256_controller/u_msg_sch
+
+    Line         Item                      Count     Source 
+    ----         ----                      -----     ------ 
+  File /home/dang-viet-cuong/Documents/sha256/rtl/message_schedule_generator.sv
+------------------------------------CASE Branch------------------------------------
+    104             1                    ***0***     
+Branch totals: 4 hits of 5 branches = 80.00%
+
+
+Statement Coverage:
+    Enabled Coverage              Bins      Hits    Misses  Coverage
+    ----------------              ----      ----    ------  --------
+    Statements                      28        26         2    92.85%
+
+================================Statement Details================================
+
+Statement Coverage for instance /tb_sha256/dut/u_sha256_controller/u_msg_sch --
+
+    Line         Item                      Count     Source 
+    ----         ----                      -----     ------ 
+  File /home/dang-viet-cuong/Documents/sha256/rtl/message_schedule_generator.sv
+    105             1     
+    106             1     
+
+=================================================================================
+=== Instance: /tb_sha256/dut/u_sha256_controller/u_compression
+=== Design Unit: work.compression
+=================================================================================
+Branch Coverage:
+    Enabled Coverage              Bins      Hits    Misses  Coverage
+    ----------------              ----      ----    ------  --------
+    Branches                        10         9         1    90.00%
+
+================================Branch Details================================
+
+Branch Coverage for instance /tb_sha256/dut/u_sha256_controller/u_compression
+
+    Line         Item                      Count     Source 
+    ----         ----                      -----     ------ 
+  File /home/dang-viet-cuong/Documents/sha256/rtl/compression.sv
+------------------------------------CASE Branch------------------------------------
+    289             1                    ***0***     
+Branch totals: 2 hits of 3 branches = 66.66%
+
+
+Statement Coverage:
+    Enabled Coverage              Bins      Hits    Misses  Coverage
+    ----------------              ----      ----    ------  --------
+    Statements                      76        74         2    97.36%
+
+================================Statement Details================================
+
+Statement Coverage for instance /tb_sha256/dut/u_sha256_controller/u_compression --
+
+    Line         Item                      Count     Source 
+    ----         ----                      -----     ------ 
+  File /home/dang-viet-cuong/Documents/sha256/rtl/compression.sv
+    291             1     
+    292             1     
+
+=================================================================================
+=== Instance: /tb_sha256/dut/u_sha256_controller
+=== Design Unit: work.sha256_controller
+=================================================================================
+Branch Coverage:
+    Enabled Coverage              Bins      Hits    Misses  Coverage
+    ----------------              ----      ----    ------  --------
+    Branches                        23        22         1    95.65%
+
+================================Branch Details================================
+
+Branch Coverage for instance /tb_sha256/dut/u_sha256_controller
+
+    Line         Item                      Count     Source 
+    ----         ----                      -----     ------ 
+  File /home/dang-viet-cuong/Documents/sha256/rtl/sha256_controller.sv
+------------------------------------IF Branch------------------------------------
+    210                                 18059272     Count coming in to IF
+    210             1                    ***0***     
+                                        18059272     All False Count
+Branch totals: 1 hit of 2 branches = 50.00%
+
+
+Condition Coverage:
+    Enabled Coverage              Bins   Covered    Misses  Coverage
+    ----------------              ----      ----    ------  --------
+    Conditions                       4         2         2    50.00%
+
+================================Condition Details================================
+
+Condition Coverage for instance /tb_sha256/dut/u_sha256_controller --
+
+  File /home/dang-viet-cuong/Documents/sha256/rtl/sha256_controller.sv
+----------------Focused Condition View-------------------
+Line       210 Item    1  (i_start && ~o_ready)
+Condition totals: 0 of 2 input terms covered = 0.00%
+
+  Input Term   Covered  Reason for no coverage   Hint
+ -----------  --------  -----------------------  --------------
+     i_start         N  '_1' not hit             Hit '_1'
+     o_ready         N  '_0' not hit             Hit '_0'
+
+     Rows:       Hits  FEC Target            Non-masking condition(s)      
+ ---------  ---------  --------------------  -------------------------     
+  Row   1:          1  i_start_0             -                             
+  Row   2:    ***0***  i_start_1             ~o_ready                      
+  Row   3:    ***0***  o_ready_0             i_start                       
+  Row   4:          1  o_ready_1             i_start                       
+
+
+
+Expression Coverage:
+    Enabled Coverage              Bins   Covered    Misses  Coverage
+    ----------------              ----      ----    ------  --------
+    Expressions                     20        18         2    90.00%
+
+================================Expression Details================================
+
+Expression Coverage for instance /tb_sha256/dut/u_sha256_controller --
+
+  File /home/dang-viet-cuong/Documents/sha256/rtl/sha256_controller.sv
+
+----------------Focused Expression View-----------------
+Line       214 Item    1  ((state == INIT) && bb_done)
+Expression totals: 1 of 2 input terms covered = 50.00%
+
+       Input Term   Covered  Reason for no coverage   Hint
+      -----------  --------  -----------------------  --------------
+          bb_done         N  '_0' not hit             Hit '_0'
+
+     Rows:       Hits  FEC Target            Non-masking condition(s)      
+ ---------  ---------  --------------------  -------------------------     
+  Row   1:          1  (state == INIT)_0     -                             
+  Row   2:          1  (state == INIT)_1     bb_done                       
+  Row   3:    ***0***  bb_done_0             (state == INIT)               
+  Row   4:          1  bb_done_1             (state == INIT)               
+
+
+
+----------------Focused Expression View-----------------
+Line       233 Item    1  (((state == INIT) && bb_done) && ~msg_enable_r)
+Expression totals: 2 of 3 input terms covered = 66.66%
+
+       Input Term   Covered  Reason for no coverage   Hint
+      -----------  --------  -----------------------  --------------
+          bb_done         N  '_0' not hit             Hit '_0'
+
+     Rows:       Hits  FEC Target            Non-masking condition(s)      
+ ---------  ---------  --------------------  -------------------------     
+  Row   1:          1  (state == INIT)_0     -                             
+  Row   2:          1  (state == INIT)_1     (~msg_enable_r && bb_done)    
+  Row   3:    ***0***  bb_done_0             (state == INIT)               
+  Row   4:          1  bb_done_1             (~msg_enable_r && (state == INIT))
+  Row   5:          1  msg_enable_r_0        ((state == INIT) && bb_done)  
+  Row   6:          1  msg_enable_r_1        ((state == INIT) && bb_done)  
+
+
+
+
+
+
+
+
+Statement Coverage:
+    Enabled Coverage              Bins      Hits    Misses  Coverage
+    ----------------              ----      ----    ------  --------
+    Statements                      32        31         1    96.87%
+
+================================Statement Details================================
+
+Statement Coverage for instance /tb_sha256/dut/u_sha256_controller --
+
+    Line         Item                      Count     Source 
+    ----         ----                      -----     ------ 
+  File /home/dang-viet-cuong/Documents/sha256/rtl/sha256_controller.sv
+    211             1     
+Toggle Coverage:
+    Enabled Coverage              Bins      Hits    Misses  Coverage
+    ----------------              ----      ----    ------  --------
+    Toggles                        886       882         4    99.54%
+
+================================Toggle Details================================
+
+Toggle Coverage for instance /tb_sha256/dut/u_sha256_controller --
+
+                                              Node      1H->0L      0L->1H                          "Coverage"
+                                              ---------------------------------------------------------------
+                                           error_r           0           0                                0.00 
+                                         nextstate               ENUM type       Value       Count 
+                                           o_error           0           0                                0.00 
+                                             state               ENUM type       Value       Count 
+
+Total Node Count     =        449 
+Toggled Node Count   =        447 
+Untoggled Node Count =          2 
+
+Toggle Coverage      =      99.54% (882 of 886 bins)
+
+=================================================================================
+=== Instance: /tb_sha256/dut
+=== Design Unit: work.sha_top
+=================================================================================
+Toggle Coverage:
+    Enabled Coverage              Bins      Hits    Misses  Coverage
+    ----------------              ----      ----    ------  --------
+    Toggles                        348       344         4    98.85%
+
+================================Toggle Details================================
+
+Toggle Coverage for instance /tb_sha256/dut --
+
+                                              Node      1H->0L      0L->1H                          "Coverage"
+                                              ---------------------------------------------------------------
+                                        ctrl_error           0           0                                0.00 
+                                           o_error           0           0                                0.00 
+
+Total Node Count     =        174 
+Toggled Node Count   =        172 
+Untoggled Node Count =          2 
+
+Toggle Coverage      =      98.85% (344 of 348 bins)
+
+
+Total Coverage By Instance (filtered view): 85.03%
+
