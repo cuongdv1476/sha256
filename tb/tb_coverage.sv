@@ -1,7 +1,7 @@
 // Functional coverage is sampled from accepted message starts/words and
 // externally visible protocol events. Bins represent SHA-256 requirements;
 // no implementation state encodings or catch-all digest bins are used.
-class tb_coverage extends uvm_component;
+class tb_coverage extends uvm_subscriber #(sha256_transaction);
 
     `uvm_component_utils(tb_coverage)
 
@@ -82,17 +82,10 @@ class tb_coverage extends uvm_component;
         }
 
         cp_reset_scenario: coverpoint reset_scenario iff (!rst_n) {
-            bins power_up_idle = {0};
-            bins wait_block_receive = {1};
-            bins block_padding = {2};
-            bins schedule_expand = {3};
-            bins schedule_output = {4};
-            bins controller_init = {5};
-            bins compression_round0 = {6};
-            bins compression_round31 = {7};
-            bins compression_round63 = {8};
-            bins controller_check_next = {9};
-            bins controller_done = {10};
+            bins idle = {0};
+            bins receiving = {1};
+            bins processing = {2};
+            bins outputting = {3};
         }
 
         cp_start_accepted: coverpoint i_start_accepted iff (rst_n) {
@@ -208,8 +201,8 @@ class tb_coverage extends uvm_component;
             bins ones = {32'hffff_ffff};
             bins msb_only = {32'h8000_0000};
             bins lsb_only = {32'h0000_0001};
-            bins alternating_a = {32'h5555_aaaa};
-            bins alternating_b = {32'haaaa_5555};
+            bins alternating_a = {32'haaaa_aaaa};
+            bins alternating_b = {32'h5555_5555};
             bins structured = {
                 32'h5555_5555, 32'haaaa_aaaa, 32'h0f0f_0f0f,
                 32'hf0f0_f0f0, 32'h00ff_00ff, 32'hff00_ff00,
@@ -279,8 +272,18 @@ class tb_coverage extends uvm_component;
     // output backpressure and acceptance-after-stall cannot occur on this port.
     covergroup output_protocol_cg with function sample(bit valid, bit done, int latency);
         option.per_instance = 1; option.goal = 100;
-        cp_valid_done: coverpoint {valid,done} { bins inactive={2'b00}; bins pulse={2'b11}; ignore_bins mismatch={2'b01,2'b10}; }
-        cp_result_latency: coverpoint latency iff (valid && done) { bins one_block_result={[1:255]}; bins multi_block_result={[256:1023]}; bins long_result={[1024:$]}; }
+        cp_valid_done: coverpoint {valid,done} {
+            bins inactive={2'b00};
+            bins digest_word={2'b10};
+            bins stream_complete={2'b01};
+            // digest raises done on the cycle after valid is deasserted.
+            ignore_bins simultaneous_valid_done={2'b11};
+        }
+        cp_result_latency: coverpoint latency iff (done) {
+            bins one_block_result={[1:255]};
+            bins multi_block_result={[256:1023]};
+            bins long_result={[1024:$]};
+        }
     endgroup
 
     covergroup reset_control_cg with function sample(bit rst_n, int scenario, int ctx, bit start, bit busy, bit ready, bit valid);
@@ -291,15 +294,15 @@ class tb_coverage extends uvm_component;
             bins idle_no_start={3'b001};
             bins busy_no_start={3'b010,3'b011};
             ignore_bins idle_not_ready={3'b000};
-            illegal_bins start_while_busy={3'b110,3'b111};
+            bins start_while_busy={3'b110,3'b111};
         }
         cp_control_validity: coverpoint {busy,ready,valid} iff (rst_n) { bins idle={3'b010}; bins receive={3'b110}; bins process={3'b100}; bins result={3'b101}; }
-        cp_reset_phase: coverpoint scenario iff (!rst_n) { bins powerup={0}; bins receive={1}; bins processing={[2:9]}; bins done={10}; }
+        cp_reset_phase: coverpoint scenario iff (!rst_n) { bins idle={0}; bins receive={1}; bins processing={2}; bins output_phase={3}; }
         cx_reset_context: cross cp_reset_phase, cp_reset_context {
-            ignore_bins powerup_other = binsof(cp_reset_phase.powerup) && !binsof(cp_reset_context.idle);
+            ignore_bins idle_other = binsof(cp_reset_phase.idle) && !binsof(cp_reset_context.idle);
             ignore_bins receive_other = binsof(cp_reset_phase.receive) && !binsof(cp_reset_context.input_receive);
             ignore_bins processing_other = binsof(cp_reset_phase.processing) && !binsof(cp_reset_context.processing);
-            ignore_bins done_other = binsof(cp_reset_phase.done) && !binsof(cp_reset_context.output_pulse);
+            ignore_bins output_other = binsof(cp_reset_phase.output_phase) && !binsof(cp_reset_context.output_pulse);
         }
     endgroup
 
@@ -333,24 +336,31 @@ class tb_coverage extends uvm_component;
     endfunction
 
     function void sample_extended(bit rst_n, bit valid_in, bit ready_in,
-        bit [63:0] len, bit [31:0] data, bit start, bit busy, bit ready,
-        bit valid, bit done, bit start_accept, bit word_accept,
+        bit [63:0] len, bit [31:0] data, bit start,
+        bit pre_busy, bit pre_ready, bit pre_valid,
+        bit busy, bit ready, bit valid, bit done,
+        bit start_accept, bit word_accept,
         bit [3:0] scenario, int unsigned stall_cycles, int unsigned latency);
         int unsigned words, blocks;
         int position, size, ctx;
-        words = (len + 31) / 32;
-        blocks = (len + 576) / 512;
-        size = size_class(len);
-        if (len > 33 && len <= 512) size = SIZE_SINGLE;
-        ctx = !message_active ? 0 : (busy && ready ? 1 : (busy && !valid ? 2 : 1));
-        if (valid) ctx = 3;
+        bit [63:0] active_len;
+        active_len = start_accept ? len : current_length;
+        words = (active_len + 31) / 32;
+        blocks = (active_len + 576) / 512;
+        size = size_class(active_len);
+        if (active_len > 33 && active_len <= 512) size = SIZE_SINGLE;
+        // Use pre-reset outputs to retain the operating context on the reset edge.
+        ctx = pre_valid ? 3 : (pre_busy ? (pre_ready ? 1 : 2) : 0);
         position = stall_position(word_index, words);
 
-        message_cg.sample(len, blocks);
-        padding_cg.sample(len);
+        if (start_accept) begin
+            message_cg.sample(len, blocks);
+            padding_cg.sample(len);
+        end
         input_protocol_cg.sample(valid_in, ready_in, stall_cycles, position, size);
         output_protocol_cg.sample(valid, done, latency);
-        reset_control_cg.sample(rst_n, scenario, ctx, start, busy, ready, valid);
+        reset_control_cg.sample(rst_n, scenario, ctx, start,
+                                pre_busy, pre_ready, pre_valid);
         input_data_cg.sample(data_pattern(data), size, position, word_accept);
 
         if (start_accept) begin
@@ -372,8 +382,77 @@ class tb_coverage extends uvm_component;
         previous_valid = valid;
     endfunction
 
+    function void write(sha256_transaction t);
+        sha256_transaction tr;
+        bit start_accepted;
+        bit word_accepted;
+        bit input_stalled;
+        int unsigned stall_run_length;
+
+        tr = t;
+        start_accepted = tr.i_start && tr.o_ready_pre && !tr.o_busy_pre;
+        word_accepted = tr.i_enable && tr.o_ready_pre
+                      && !(start_accepted && (tr.i_bit_length == 0));
+        input_stalled = tr.i_rst_n && tr.i_enable && !word_accepted
+                      && !(start_accepted && (tr.i_bit_length == 0));
+
+        if (input_stalled)
+            input_stall_cycles++;
+        else
+            input_stall_cycles = 0;
+        stall_run_length = input_stall_cycles;
+
+        sample_cov(
+            tr.i_rst_n, tr.i_enable, tr.i_bit_length, tr.i_data,
+            tr.o_ready, tr.o_busy, tr.o_valid,
+            start_accepted, word_accepted, tr.cov_reset_scenario,
+            input_stalled, stall_run_length
+        );
+        sample_extended(
+            tr.i_rst_n, tr.i_enable, tr.o_ready_pre, tr.i_bit_length, tr.i_data,
+            tr.i_start, tr.o_busy_pre, tr.o_ready_pre, tr.o_valid_pre,
+            tr.o_busy, tr.o_ready, tr.o_valid, tr.o_done,
+            start_accepted, word_accepted, tr.cov_reset_scenario,
+            stall_run_length, cycles_since_start
+        );
+    endfunction
+
     function void report_phase(uvm_phase phase);
+        integer report_fd;
         super.report_phase(phase);
+
+        // Questa code coverage reports are generated separately with vcover.
+        // Keep the UVM functional coverage summary in its own text report.
+        report_fd = $fopen("coverage/functional_coverage_report.txt", "w");
+        if (report_fd == 0) begin
+            `uvm_error("COVERAGE", "Cannot open coverage/functional_coverage_report.txt")
+        end else begin
+            $fdisplay(report_fd, "SHA-256 Functional Coverage Report");
+            $fdisplay(report_fd, "Samples: %0d", sample_count);
+            $fdisplay(report_fd, "Overall: %.2f%%", sha256_cg.get_inst_coverage());
+            $fdisplay(report_fd, "");
+            $fdisplay(report_fd, "Coverpoint / Cross                 Coverage");
+            $fdisplay(report_fd, "---------------------------------- --------");
+            $fdisplay(report_fd, "Message length                     %.2f%%", sha256_cg.cp_length.get_coverage());
+            $fdisplay(report_fd, "Bit alignment                      %.2f%%", sha256_cg.cp_bit_alignment.get_coverage());
+            $fdisplay(report_fd, "Padded block count                 %.2f%%", sha256_cg.cp_padded_block_count.get_coverage());
+            $fdisplay(report_fd, "Padding remainder                  %.2f%%", sha256_cg.cp_padding_remainder.get_coverage());
+            $fdisplay(report_fd, "Alignment x block count            %.2f%%", sha256_cg.cx_alignment_blocks.get_coverage());
+            $fdisplay(report_fd, "Reset scenario                     %.2f%%", sha256_cg.cp_reset_scenario.get_coverage());
+            $fdisplay(report_fd, "Input stall run                     %.2f%%", sha256_cg.cp_stall_run.get_coverage());
+            $fdisplay(report_fd, "Stall x message size               %.2f%%", sha256_cg.cx_stall_size.get_coverage());
+            $fdisplay(report_fd, "Status                              %.2f%%", sha256_cg.cp_status.get_coverage());
+            $fdisplay(report_fd, "Valid / done                       %.2f%%", sha256_cg.cp_valid_done.get_coverage());
+            $fdisplay(report_fd, "Data                                %.2f%%", sha256_cg.cp_data.get_coverage());
+            $fdisplay(report_fd, "Message scenarios                  %.2f%%", message_cg.get_inst_coverage());
+            $fdisplay(report_fd, "Padding scenarios                  %.2f%%", padding_cg.get_inst_coverage());
+            $fdisplay(report_fd, "Data patterns                      %.2f%%", input_data_cg.get_inst_coverage());
+            $fdisplay(report_fd, "Input protocol                     %.2f%%", input_protocol_cg.get_inst_coverage());
+            $fdisplay(report_fd, "Output pulse / latency             %.2f%%", output_protocol_cg.get_inst_coverage());
+            $fdisplay(report_fd, "Reset control                      %.2f%%", reset_control_cg.get_inst_coverage());
+            $fclose(report_fd);
+        end
+
         `uvm_info("COVERAGE", $sformatf(
             "SHA-256 functional coverage = %.2f%% (samples=%0d)",
             sha256_cg.get_inst_coverage(), sample_count), UVM_NONE)

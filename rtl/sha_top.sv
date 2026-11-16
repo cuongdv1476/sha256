@@ -21,17 +21,12 @@ module sha_top #(
 
     output logic                         o_busy,
     output logic                         o_ready,
-    output logic                         o_done,
-    output logic                         o_valid,
+    output logic                         o_done,   // pulse after the final digest word
+    output logic                         o_valid,  // high for each valid 32-bit digest word
     output logic                         o_error,
 
     // =====================================================
-    // DIGEST OUTPUT
-    // =====================================================
-
-    output logic [255:0]                 o_digest,
-
-    // Sequential 32-bit digest output (debug)
+    // Serialized digest output: one DATA_WIDTH-bit word per valid cycle
     output logic [DATA_WIDTH-1:0]        o_data
 );
 
@@ -45,7 +40,6 @@ module sha_top #(
     logic ctrl_valid;
     logic ctrl_error;
 
-    logic [255:0] ctrl_digest;
     logic [DATA_WIDTH-1:0] ctrl_data;
 
 
@@ -76,8 +70,7 @@ module sha_top #(
         .o_valid      (ctrl_valid),
         .o_error      (ctrl_error),
 
-        // Digest Output
-        .o_digest     (ctrl_digest),
+        // Serialized digest output
         .o_data       (ctrl_data)
     );
 
@@ -92,7 +85,6 @@ module sha_top #(
     assign o_valid  = ctrl_valid;
     assign o_error  = ctrl_error;
 
-    assign o_digest = ctrl_digest;
     assign o_data   = ctrl_data;
 
 endmodule

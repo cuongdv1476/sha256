@@ -1,2 +1,2 @@
-Total coverage (filtered view): 90.29%
+Total coverage (filtered view): 98.57%
 

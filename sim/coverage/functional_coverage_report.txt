@@ -1,0 +1,23 @@
+SHA-256 Functional Coverage Report
+Samples: 326451
+Overall: 100.00%
+
+Coverpoint / Cross                 Coverage
+---------------------------------- --------
+Message length                     100.00%
+Bit alignment                      100.00%
+Padded block count                 100.00%
+Padding remainder                  100.00%
+Alignment x block count            100.00%
+Reset scenario                     100.00%
+Input stall run                     100.00%
+Stall x message size               100.00%
+Status                              100.00%
+Valid / done                       100.00%
+Data                                100.00%
+Message scenarios                  100.00%
+Padding scenarios                  100.00%
+Data patterns                      100.00%
+Input protocol                     100.00%
+Output pulse / latency             100.00%
+Reset control                      100.00%

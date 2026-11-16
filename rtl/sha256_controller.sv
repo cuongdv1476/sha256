@@ -14,11 +14,10 @@ module sha256_controller #(
 
     output logic         o_busy,
     output logic         o_ready,
-    output logic         o_done,
-    output logic         o_valid,
+    output logic         o_done,   // pulse after the final digest word
+    output logic         o_valid,  // each cycle with a valid serialized word
     output logic         o_error,
-    output logic [255:0] o_digest,
-    output logic [DATA_WIDTH-1:0]  o_data       // word hash tuần tự (debug)
+    output logic [DATA_WIDTH-1:0] o_data
 );
 
     // =========================================================
@@ -52,7 +51,10 @@ module sha256_controller #(
 
     // ----- digest -----
     logic [255:0]        dig_i_data;
-    logic [DATA_WIDTH-1:0]         dig_o_data;
+    logic [DATA_WIDTH-1:0] dig_o_data;
+    logic                dig_load;
+    logic                dig_valid;
+    logic                dig_done;
 
     // =========================================================
     // 2. Instantiation các khối
@@ -107,11 +109,14 @@ module sha256_controller #(
 
     digest #(
         .DATA_WIDTH (DATA_WIDTH)
-    ) u_digest(
-        .i_clk   (i_clk),
-        .i_rst_n (i_rst_n),
-        .i_data  (dig_i_data),
-        .o_data  (dig_o_data)
+    ) u_digest (
+        .i_clk    (i_clk),
+        .i_rst_n  (i_rst_n),
+        .i_load   (dig_load),
+        .i_digest (dig_i_data),
+        .o_valid  (dig_valid),
+        .o_done   (dig_done),
+        .o_data   (dig_o_data)
     );
 
     // =========================================================
@@ -128,8 +133,7 @@ module sha256_controller #(
         cmp_data[4], cmp_data[5], cmp_data[6], cmp_data[7]
     };
 
-    assign o_data = dig_o_data;
-    assign o_digest = dig_i_data;
+    assign o_data       = dig_o_data;
 
     // =========================================================
     // 4. FSM
@@ -141,7 +145,7 @@ module sha256_controller #(
         INIT,         // pulse msg_enable + chờ msg_valid
         COMPRESS,         // đang chạy 64 round
         CHECK_NEXT,       // kiểm tra còn block tiếp theo không
-        DONE            // xuất hash + done
+        OUTPUT_DIGEST     // xuất digest thành các word 32-bit
     } state_t;
 
     state_t state, nextstate;
@@ -166,7 +170,7 @@ module sha256_controller #(
                 if (bb_done)
                     nextstate = INIT;
                 else if (!bb_busy)
-                    nextstate = DONE;
+                    nextstate = OUTPUT_DIGEST;
             end
 
             INIT: begin
@@ -183,8 +187,9 @@ module sha256_controller #(
                 nextstate = WAIT_BLOCK;
             end
 
-            DONE: begin
-                nextstate = IDLE;
+            OUTPUT_DIGEST: begin
+                if (dig_done)
+                    nextstate = IDLE;
             end
 
             default: nextstate = IDLE;
@@ -207,7 +212,7 @@ module sha256_controller #(
             msg_data_d <= msg_data;
 
             // Latch an invalid start request for software/debug visibility.
-            if (i_start && !o_ready)
+            if (i_start && (state != IDLE))
                 error_r <= 1'b1;
 
             // Ghi nhận đã phát msg_enable cho block hiện tại.
@@ -239,8 +244,10 @@ module sha256_controller #(
     // Status ra ngoài
     assign o_busy = (state != IDLE);
     assign o_ready = (state == IDLE) || ((state == WAIT_BLOCK) && bb_ready);
-    assign o_done = (state == DONE);
-    assign o_valid = (state == DONE);
+    assign dig_load = (state == WAIT_BLOCK) && !bb_busy;
+
+    assign o_done  = dig_done;
+    assign o_valid = dig_valid;
     assign o_error = error_r;
 
 endmodule

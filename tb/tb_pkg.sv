@@ -1,0 +1,25 @@
+package sha256_pkg;
+    import uvm_pkg::*;
+    `include "uvm_macros.svh"
+
+    `include "tb_transaction.sv"
+    `include "tb_sequence.sv"
+    `include "tc_reset_sequence.sv"
+    `include "tc_basic_sequence.sv"
+    `include "tc_boundary_padding_sequence.sv"
+    `include "tc_multiblock_sequence.sv"
+    `include "tc_pattern_sequence.sv"
+    `include "tc_protocol_sequence.sv"
+    `include "tc_transaction_sequence.sv"
+    `include "tc_random_sequence.sv"
+    `include "tc_sha256_regression_sequence.sv"
+    `include "tb_sequencer.sv"
+    `include "tb_driver.sv"
+    `include "tb_monitor.sv"
+    `include "tb_reference_model.sv"
+    `include "tb_scoreboard.sv"
+    `include "tb_coverage.sv"
+    `include "tb_agent.sv"
+    `include "tb_env.sv"
+    `include "tb_test.sv"
+endpackage

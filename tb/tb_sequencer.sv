@@ -1,12 +1,7 @@
-class tb_sequencer extends uvm_sequencer #(tb_transaction);
+class sha256_sequencer extends uvm_sequencer #(sha256_transaction);
+    `uvm_component_utils(sha256_sequencer)
 
-    `uvm_component_utils(tb_sequencer)
-
-    function new(
-        string        name,
-        uvm_component parent
-    );
+    function new(string name, uvm_component parent);
         super.new(name, parent);
     endfunction
-
-endclass : tb_sequencer
+endclass

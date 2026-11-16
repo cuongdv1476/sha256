@@ -1,152 +1,43 @@
-class tb_monitor extends uvm_monitor;
+class sha256_monitor extends uvm_monitor;
+    `uvm_component_utils(sha256_monitor)
 
-    `uvm_component_utils(tb_monitor)
+    virtual sha256_if vif;
+    uvm_analysis_port #(sha256_transaction) ap;
 
-    // =========================================================
-    // VIRTUAL INTERFACE
-    // =========================================================
-    virtual tb_interface #(
-        .BLOCK_SIZE (BLOCK_SIZE),
-        .DATA_WIDTH (DATA_WIDTH),
-        .BIT_LENGTH (BIT_LENGTH)
-    ) mon_vif;
-
-    // =========================================================
-    // ANALYSIS PORT
-    // =========================================================
-    uvm_analysis_port #(tb_transaction) ap;
-
-    // =========================================================
-    // COVERAGE COMPONENT
-    // =========================================================
-    tb_coverage cov;
-
-
-    // =========================================================
-    // CONSTRUCTOR
-    // =========================================================
-    function new(
-        string        name,
-        uvm_component parent
-    );
+    function new(string name, uvm_component parent);
         super.new(name, parent);
-
         ap = new("ap", this);
     endfunction
 
-
-    // =========================================================
-    // BUILD PHASE
-    // =========================================================
     function void build_phase(uvm_phase phase);
-
         super.build_phase(phase);
-
-        if (
-            !uvm_config_db #(
-                virtual tb_interface #(
-                    .BLOCK_SIZE (BLOCK_SIZE),
-                    .DATA_WIDTH (DATA_WIDTH),
-                    .BIT_LENGTH (BIT_LENGTH)
-                )
-            )::get(
-                this,
-                "",
-                "mon_vif",
-                mon_vif
-            )
-        ) begin
-            `uvm_fatal(
-                "MON",
-                "Cannot get virtual interface"
-            )
-        end
-
-        cov = tb_coverage::type_id::create("cov", this);
-
+        if (!uvm_config_db#(virtual sha256_if)::get(this, "", "vif", vif))
+            `uvm_fatal("MON", "Cannot get SHA-256 virtual interface")
     endfunction
 
-
-    // =========================================================
-    // RUN PHASE
-    // =========================================================
     task run_phase(uvm_phase phase);
-
-        tb_transaction tr;
-        int unsigned stall_run_length;
-        bit input_stalled;
-        bit ready_pre, busy_pre, valid_pre, done_pre;
-
+        sha256_transaction tr;
         forever begin
-
-            // Wait for rising edge
-            @(posedge mon_vif.clk);
-
-            // Capture transaction
-            tr = tb_transaction::type_id::create("tr");
-
-            // Capture input signals
-            tr.i_enable   = mon_vif.i_enable;
-            tr.i_start    = mon_vif.i_start;
-            tr.bit_length = mon_vif.bit_length;
-            tr.i_data     = mon_vif.i_data;
-            tr.rst_n      = mon_vif.rst_n;
-            ready_pre = mon_vif.o_ready;
-            busy_pre  = mon_vif.o_busy;
-            valid_pre = mon_vif.o_valid;
-            done_pre  = mon_vif.o_done;
-            tr.i_start_accepted = mon_vif.i_start && mon_vif.o_ready && !mon_vif.o_busy;
-            // A zero-bit message may assert start and enable together; the
-            // block buffer deliberately ignores that data word.
-            tr.i_word_accepted  = mon_vif.i_enable && mon_vif.o_ready
-                                && !(tr.i_start_accepted && (mon_vif.bit_length == 0));
-            input_stalled = mon_vif.rst_n && mon_vif.i_enable && !tr.i_word_accepted
-                          && !(tr.i_start_accepted && (mon_vif.bit_length == 0));
-            if (input_stalled)
-                stall_run_length++;
-            else
-                stall_run_length = 0;
-
-            // Wait for DUT outputs to settle
+            @(posedge vif.clk);
+            tr = sha256_transaction::type_id::create("observed");
+            tr.i_rst_n      = vif.rst_n;
+            tr.i_start      = vif.start;
+            tr.i_enable     = vif.enable;
+            tr.i_bit_length = vif.bit_length;
+            tr.i_data       = vif.data;
+            tr.cov_reset_scenario = vif.cov_reset_scenario;
+            tr.cov_expect_error = vif.cov_expect_error;
+            tr.o_ready_pre  = vif.ready;
+            tr.o_busy_pre   = vif.busy;
+            tr.o_valid_pre  = vif.valid;
             #1ps;
-
-            // Capture output signals
-            tr.o_ready  = mon_vif.o_ready;
-            tr.o_busy   = mon_vif.o_busy;
-            tr.o_done   = mon_vif.o_done;
-            tr.o_valid  = mon_vif.o_valid;
-            tr.o_error  = mon_vif.o_error;
-            tr.o_digest = mon_vif.o_digest;
-            tr.o_data   = mon_vif.o_data;
-
-            // Sample functional coverage
-            cov.sample_cov(
-                mon_vif.rst_n,
-                mon_vif.i_enable,
-                mon_vif.bit_length,
-                mon_vif.i_data,
-                mon_vif.o_ready,
-                mon_vif.o_busy,
-                mon_vif.o_valid,
-                tr.i_start_accepted,
-                tr.i_word_accepted,
-                mon_vif.reset_scenario,
-                input_stalled,
-                stall_run_length
-            );
-            cov.sample_extended(
-                mon_vif.rst_n, mon_vif.i_enable, ready_pre,
-                mon_vif.bit_length, mon_vif.i_data, mon_vif.i_start,
-                busy_pre, ready_pre, valid_pre, done_pre,
-                tr.i_start_accepted, tr.i_word_accepted,
-                mon_vif.reset_scenario, stall_run_length, cov.cycles_since_start
-            );
-
-            // Send transaction to scoreboard
+            tr.o_busy   = vif.busy;
+            tr.o_ready  = vif.ready;
+            tr.o_done   = vif.done;
+            tr.o_valid  = vif.valid;
+            tr.o_error  = vif.error;
+            tr.o_data = vif.o_data;
             ap.write(tr);
-
         end
-
     endtask
-
-endclass : tb_monitor
+endclass

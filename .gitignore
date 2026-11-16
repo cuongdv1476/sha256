@@ -1,0 +1,9 @@
+sim/work/
+sim/log/
+sim/*.wlf
+sim/vsim.dbg
+sim/transcript
+sim/sim.log
+sim/modelsim.ini
+*.ucdb
+*_html/

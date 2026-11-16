@@ -1,89 +1,46 @@
-class tb_driver extends uvm_driver #(tb_transaction);
+class sha256_driver extends uvm_driver #(sha256_transaction);
+    `uvm_component_utils(sha256_driver)
 
-    `uvm_component_utils(tb_driver)
+    virtual sha256_if vif;
 
-    virtual tb_interface #(
-        .BLOCK_SIZE (BLOCK_SIZE),
-        .DATA_WIDTH (DATA_WIDTH),
-        .BIT_LENGTH (BIT_LENGTH)
-    ) drv_vif;
-
-    function new(
-        string        name,
-        uvm_component parent
-    );
+    function new(string name, uvm_component parent);
         super.new(name, parent);
     endfunction
 
-
-    // ---------------- BUILD PHASE ----------------
     function void build_phase(uvm_phase phase);
         super.build_phase(phase);
-
-        if (
-            !uvm_config_db #(
-                virtual tb_interface #(
-                    .BLOCK_SIZE (BLOCK_SIZE),
-                    .DATA_WIDTH (DATA_WIDTH),
-                    .BIT_LENGTH (BIT_LENGTH)
-                )
-            )::get(
-                this,
-                "",
-                "drv_vif",
-                drv_vif
-            )
-        ) begin
-            `uvm_fatal("DRV", "Cannot get virtual interface")
-        end
+        if (!uvm_config_db#(virtual sha256_if)::get(this, "", "vif", vif))
+            `uvm_fatal("DRV", "Cannot get SHA-256 virtual interface")
     endfunction
 
-
-    // ---------------- RUN PHASE ----------------
     task run_phase(uvm_phase phase);
-
-        tb_transaction t;
-        int unsigned ready_wait_cycles;
+        sha256_transaction tr;
+        vif.rst_n      <= 1'b0;
+        vif.start      <= 1'b0;
+        vif.enable     <= 1'b0;
+        vif.bit_length <= '0;
+        vif.data       <= '0;
+        vif.cov_reset_scenario <= '0;
+        vif.cov_expect_error <= 1'b0;
 
         forever begin
+            seq_item_port.get_next_item(tr);
+            @(negedge vif.clk);
+            vif.rst_n      <= tr.i_rst_n;
+            vif.start      <= tr.i_start;
+            vif.enable     <= tr.i_enable;
+            vif.bit_length <= tr.i_bit_length;
+            vif.data       <= tr.i_data;
+            vif.cov_reset_scenario <= tr.cov_reset_scenario;
+            vif.cov_expect_error <= tr.cov_expect_error;
 
-            seq_item_port.get_next_item(t);
+            // Keep an enabled word and its data stable until the DUT accepts
+            // it. The ready signal can go low while a full block is hashed.
+            do begin
+                @(posedge vif.clk);
+            end while (tr.i_enable && !vif.ready);
 
-            // Drive at negedge. For a word, hold valid and data stable until
-            // the ready/valid transfer occurs at a rising edge.
-            @(negedge drv_vif.clk);
-
-            drv_vif.i_enable   = t.i_enable;
-            drv_vif.i_start    = t.i_start;
-            drv_vif.bit_length = t.bit_length;
-            drv_vif.i_data     = t.i_data;
-
-            if (t.i_enable) begin
-                ready_wait_cycles = 0;
-                do begin
-                    @(posedge drv_vif.clk);
-                    if (!drv_vif.o_ready) begin
-                        ready_wait_cycles++;
-                        if (ready_wait_cycles >= 200000)
-                            `uvm_fatal("DRV_WATCHDOG", $sformatf(
-                                "Input word %08h was not accepted within %0d cycles",
-                                t.i_data, ready_wait_cycles))
-                    end
-                end while (!drv_vif.o_ready);
-            end
-            else begin
-                @(posedge drv_vif.clk);
-            end
-
-            // Clear both controls after the accepted edge. Under backpressure
-            // i_enable/data stay asserted/stable until o_ready is observed.
-            @(negedge drv_vif.clk);
-            drv_vif.i_enable = 1'b0;
-            drv_vif.i_start  = 1'b0;
             seq_item_port.item_done();
-
         end
-
     endtask
-
-endclass : tb_driver
+endclass
