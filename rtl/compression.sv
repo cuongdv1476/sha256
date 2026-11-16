@@ -14,7 +14,7 @@ module compression #(
 );
 
     // =========================================================
-    // 2. SHA-256 INITIAL HASH VALUES
+    // 2. SHA-256 CÁC GIÁ TRỊ BĂM BAN ĐẦU
     // =========================================================
 
     localparam logic [31:0] H0 = 32'h6a09e667;
@@ -28,7 +28,7 @@ module compression #(
 
 
     // =========================================================
-    // 3. SHA-256 ROUND CONSTANTS
+    // 3. SHA-256 CÁC HẰNG SỐ VÒNG
     // =========================================================
 
     localparam logic [31:0] K [0:63] = '{
@@ -52,7 +52,7 @@ module compression #(
 
 
     // =========================================================
-    // 4. FSM
+    // 4. Máy trạng thái hữu hạn
     // =========================================================
 
     typedef enum logic {
@@ -64,7 +64,7 @@ module compression #(
 
 
     // =========================================================
-    // 5. REGISTERS
+    // 5. CÁC THANH GHI
     // =========================================================
 
     logic [DATA_WIDTH-1:0] H [0:7];
@@ -78,10 +78,10 @@ module compression #(
 
 
     // =========================================================
-    // 6. SHA-256 FUNCTIONS
+    // 6. CÁC HÀM SHA-256
     // =========================================================
 
-    // Right Rotate
+    // Phép xoay phải
     function automatic logic [DATA_WIDTH-1:0] rotr(
         input logic [DATA_WIDTH-1:0] x,
         input int n
@@ -90,7 +90,7 @@ module compression #(
     endfunction
 
 
-    // Choose
+    // Hàm chọn
     function automatic logic [DATA_WIDTH-1:0] ch(
         input logic [DATA_WIDTH-1:0] x, y, z
     );
@@ -98,7 +98,7 @@ module compression #(
     endfunction
 
 
-    // Majority
+    // Hàm đa số
     function automatic logic [DATA_WIDTH-1:0] maj(
         input logic [DATA_WIDTH-1:0] x, y, z
     );
@@ -106,7 +106,7 @@ module compression #(
     endfunction
 
 
-    // Big Sigma 0
+    // Sigma lớn 0
     function automatic logic [DATA_WIDTH-1:0] sigma0(
         input logic [DATA_WIDTH-1:0] x
     );
@@ -114,7 +114,7 @@ module compression #(
     endfunction
 
 
-    // Big Sigma 1
+    // Sigma lớn 1
     function automatic logic [DATA_WIDTH-1:0] sigma1(
         input logic [DATA_WIDTH-1:0] x
     );
@@ -123,7 +123,7 @@ module compression #(
 
 
     // =========================================================
-    // 7. TEMPORARY VARIABLES
+    // 7. CÁC BIẾN TẠM
     // =========================================================
 
     assign t1 = h + sigma1(e) + ch(e, f, g) + K[round_cnt] + i_data;
@@ -132,24 +132,24 @@ module compression #(
 
 
     // =========================================================
-    // 8. STATUS SIGNALS
+    // 8. CÁC TÍN HIỆU TRẠNG THÁI
     // =========================================================
 
     assign o_busy = (state == ROUND);
 
 
     // =========================================================
-    // 9. MAIN FSM AND COMPRESSION LOGIC
+    // 9. MÁY TRẠNG THÁI HỮU HẠN CHÍNH VÀ LOGIC NÉN
     // =========================================================
 
     always_ff @(posedge i_clk) begin
 
         if (!i_rst_n) begin
 
-            // FSM
+            // Máy trạng thái hữu hạn
             state <= IDLE;
 
-            // Initial Hash Values
+            // Các giá trị băm ban đầu
             H[0] <= H0;
             H[1] <= H1;
             H[2] <= H2;
@@ -159,7 +159,7 @@ module compression #(
             H[6] <= H6;
             H[7] <= H7;
 
-            // Working Variables
+            // Các biến làm việc
             a <= 32'h0;
             b <= 32'h0;
             c <= 32'h0;
@@ -169,28 +169,28 @@ module compression #(
             g <= 32'h0;
             h <= 32'h0;
 
-            // Round Counter
+            // Bộ đếm vòng
             round_cnt <= 6'd0;
 
-            // Output
+            // Đầu ra
             o_done <= 1'b0;
 
         end
 
         else begin
 
-            // Default: one-cycle done pulse
+            // Mặc định: xung done kéo dài một chu kỳ
             o_done <= 1'b0;
 
             case (state)
 
                 // -------------------------------------------------
-                // IDLE
+                // RẢNH
                 // -------------------------------------------------
 
                 IDLE: begin
 
-                    // Initialize a new message
+                    // Khởi tạo thông điệp mới
                     if (i_init) begin
 
                         H[0] <= H0;
@@ -204,10 +204,10 @@ module compression #(
 
                     end
 
-                    // Start compression
+                    // Bắt đầu nén
                     else if (i_enable) begin
 
-                        // Load Hash Values
+                        // Nạp các giá trị băm
                         a <= H[0];
                         b <= H[1];
                         c <= H[2];
@@ -218,10 +218,10 @@ module compression #(
                         g <= H[6];
                         h <= H[7];
 
-                        // Initialize Round Counter
+                        // Initialize Bộ đếm vòng
                         round_cnt <= 6'd0;
 
-                        // Start
+                        // Bắt đầu
                         state <= ROUND;
 
                     end
@@ -230,12 +230,12 @@ module compression #(
 
 
                 // -------------------------------------------------
-                // ROUND
+                // VÒNG
                 // -------------------------------------------------
 
                 ROUND: begin
 
-                    // Update Working Variables
+                    // Update Các biến làm việc
                     h <= g;
                     g <= f;
                     f <= e;
@@ -248,12 +248,12 @@ module compression #(
 
 
                     // -------------------------------------------------
-                    // FINAL ROUND
+                    // VÒNG CUỐI
                     // -------------------------------------------------
 
                     if (round_cnt == 6'd63) begin
 
-                        // Feed-forward
+                        // Cộng bù đầu vào
                         H[0] <= H[0] + t1 + t2;
                         H[1] <= H[1] + a;
                         H[2] <= H[2] + b;
@@ -264,17 +264,17 @@ module compression #(
                         H[6] <= H[6] + f;
                         H[7] <= H[7] + g;
 
-                        // Return to IDLE
+                        // Return to RẢNH
                         state <= IDLE;
 
-                        // Completion Pulse
+                        // Xung báo hoàn tất
                         o_done <= 1'b1;
 
                     end
 
                     else begin
 
-                        // Next Round
+                        // Vòng tiếp theo
                         round_cnt <= round_cnt + 1'b1;
 
                     end
@@ -283,7 +283,7 @@ module compression #(
 
 
                 // -------------------------------------------------
-                // DEFAULT
+                // MẶC ĐỊNH
                 // -------------------------------------------------
 
                 default: begin
@@ -301,7 +301,7 @@ module compression #(
 
 
     // =========================================================
-    // 10. OUTPUT HASH VALUES
+    // 10. CÁC GIÁ TRỊ BĂM ĐẦU RA
     // =========================================================
 
     assign o_data[0] = H[0];

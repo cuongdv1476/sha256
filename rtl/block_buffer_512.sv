@@ -4,16 +4,16 @@ module block_buffer_512 #(
 )(
     input  logic                   i_clk,
     input  logic                   i_rst_n,
-    input  logic                   i_start,      // xung 1 chu kỳ: bắt đầu message
-    input  logic                   i_enable,     // word input hợp lệ
-    input  logic                   i_block_ready,// consumer đã xử lý xong o_data
+    input  logic                   i_start,      // xung 1 chu kỳ: bắt đầu thông điệp
+    input  logic                   i_enable,     // từ đầu vào hợp lệ
+    input  logic                   i_block_ready,// bộ tiêu thụ đã xử lý xong o_data
     input  logic [63:0]            i_bit_length,
     input  logic [DATA_WIDTH-1:0]  i_data,
 
     output logic [BLOCK_SIZE-1:0]  o_data,
-    output logic                   o_done,       // o_data là 1 block hợp lệ
+    output logic                   o_done,       // o_data là 1 khối hợp lệ
     output logic                   o_busy,
-    output logic                   o_ready       // có thể nhận word tiếp theo
+    output logic                   o_ready       // có thể nhận từ tiếp theo
 );
 
     typedef enum logic [1:0] {
@@ -27,24 +27,24 @@ module block_buffer_512 #(
     logic [BLOCK_SIZE-1:0] block;          // BUFFER DUY NHẤT
     logic [BLOCK_SIZE-1:0] pad_mask;
     logic [BLOCK_SIZE-1:0] pad_blk;
-    logic                  pad_length;     // cần thêm block chứa length
-    logic                  len_blk;        // đang ở lần PADDING thứ 2 (block length)
-    logic                  last_done;      // block đang ở DONE là block cuối
+    logic                  pad_length;     // cần thêm khối chứa độ dài
+    logic                  len_blk;        // đang ở lần PADDING thứ 2 (khối độ dài)
+    logic                  last_done;      // khối đang ở DONE là khối cuối
     logic [8:0]            last_bits;
     logic [63:0]           reg_bit_length;
     logic [63:0]           total_words;
     logic [63:0]           word_cnt;
     logic [3:0]            ptr;
 
-    // ---------------- Tham số chốt theo message ----------------
+    // ---------------- Tham số chốt theo thông điệp ----------------
     assign last_bits   = reg_bit_length % BLOCK_SIZE;
     assign total_words = (reg_bit_length / DATA_WIDTH)
                        + (((reg_bit_length % DATA_WIDTH) != 0) ? 64'd1 : 64'd0);
     assign pad_length  = (last_bits >= (BLOCK_SIZE - 64));          // >= 448
 
-    // word_cnt sau khi nhận đủ = total_words
-    //   lần PADDING 1: word_cnt == total_words      -> block padding
-    //   lần PADDING 2: word_cnt == total_words + 1  -> block length
+    // word_cnt sau khi nhận đủ dữ liệu = total_words
+    //   lần PADDING 1: word_cnt == total_words      -> khối đệm
+    //   lần PADDING 2: word_cnt == total_words + 1  -> khối độ dài
     assign len_blk   = (word_cnt > total_words);
     assign last_done = pad_length ? (word_cnt == total_words + 64'd2)
                                   : (word_cnt == total_words + 64'd1);
@@ -70,7 +70,7 @@ module block_buffer_512 #(
             pad_blk[63:0] = reg_bit_length;
     end
 
-    // ---------------- FSM ----------------
+    // ---------------- Máy trạng thái hữu hạn ----------------
     always_comb begin
         nextstate = state;
         case (state)
@@ -88,9 +88,9 @@ module block_buffer_512 #(
             RECEIVE: begin
                 if (i_enable) begin
                     if ((word_cnt == total_words - 64'd1) && (last_bits != '0))
-                        nextstate = PADDING;          // block cuối chưa đầy
+                        nextstate = PADDING;          // khối cuối chưa đầy
                     else if (ptr == 15)
-                        nextstate = DONE;             // block đầy
+                        nextstate = DONE;             // khối đầy
                 end
             end
 
@@ -100,7 +100,7 @@ module block_buffer_512 #(
                 if (i_block_ready) begin
                     if (last_done)
                         nextstate = IDLE;
-                    else if (word_cnt >= total_words) // còn block padding / length
+                    else if (word_cnt >= total_words) // còn khối đệm / độ dài
                         nextstate = PADDING;
                     else
                         nextstate = RECEIVE;
@@ -128,8 +128,8 @@ module block_buffer_512 #(
                     if (i_start) begin
                         reg_bit_length <= i_bit_length;
                         if (i_enable && (i_bit_length != 64'd0)) begin
-                            // IDLE advertises o_ready. If start and the first
-                            // word coincide, accept that word on this edge.
+                            // RẢNH advertises o_ready. If start and the first
+                            // thì chấp nhận từ đó ngay tại cạnh này.
                             block[(16-1)*DATA_WIDTH +: DATA_WIDTH] <= i_data;
                             word_cnt <= 64'd1;
                             ptr      <= 4'd1;

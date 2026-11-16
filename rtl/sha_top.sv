@@ -7,7 +7,7 @@ module sha_top #(
     input  logic                         i_rst_n,
 
     // =====================================================
-    // INPUT INTERFACE
+    // GIAO DIỆN ĐẦU VÀO
     // =====================================================
 
     input  logic                         i_start,
@@ -16,22 +16,22 @@ module sha_top #(
     input  logic [DATA_WIDTH-1:0]        i_data,
 
     // =====================================================
-    // STATUS INTERFACE
+    // GIAO DIỆN TRẠNG THÁI
     // =====================================================
 
     output logic                         o_busy,
     output logic                         o_ready,
-    output logic                         o_done,   // pulse after the final digest word
-    output logic                         o_valid,  // high for each valid 32-bit digest word
+    output logic                         o_done,   // xung sau từ digest cuối cùng
+    output logic                         o_valid,  // mức cao ở mỗi từ digest 32 bit hợp lệ
     output logic                         o_error,
 
     // =====================================================
-    // Serialized digest output: one DATA_WIDTH-bit word per valid cycle
+    // Đầu ra digest tuần tự: mỗi chu kỳ hợp lệ xuất một từ DATA_WIDTH bit
     output logic [DATA_WIDTH-1:0]        o_data
 );
 
     // =====================================================
-    // 1. INTERNAL SIGNALS
+    // 1. CÁC TÍN HIỆU NỘI BỘ
     // =====================================================
 
     logic ctrl_busy;
@@ -44,7 +44,7 @@ module sha_top #(
 
 
     // =====================================================
-    // 2. SHA-256 CONTROLLER
+    // 2. BỘ ĐIỀU KHIỂN SHA-256
     // =====================================================
 
     sha256_controller #(
@@ -53,17 +53,17 @@ module sha_top #(
         .BIT_LENGTH_WIDTH (BIT_LENGTH_WIDTH)
     ) u_sha256_controller (
 
-        // Clock and Reset
+        // Xung nhịp và đặt lại
         .i_clk        (i_clk),
         .i_rst_n      (i_rst_n),
 
-        // Input Interface
+        // Giao diện đầu vào
         .i_start      (i_start),
         .i_enable     (i_enable),
         .i_bit_length (i_bit_length),
         .i_data       (i_data),
 
-        // Status Interface
+        // Giao diện trạng thái
         .o_busy       (ctrl_busy),
         .o_ready      (ctrl_ready),
         .o_done       (ctrl_done),
@@ -76,7 +76,7 @@ module sha_top #(
 
 
     // =====================================================
-    // 3. OUTPUT CONNECTIONS
+    // 3. KẾT NỐI ĐẦU RA
     // =====================================================
 
     assign o_busy   = ctrl_busy;

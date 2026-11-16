@@ -6,25 +6,25 @@ module sha256_controller #(
     input  logic         i_clk,
     input  logic         i_rst_n,
 
-    // Interface ngoài
-    input  logic         i_start,          // 1 chu kỳ bắt đầu message
+    // Giao diện bên ngoài
+    input  logic         i_start,          // 1 chu kỳ bắt đầu thông điệp
     input  logic         i_enable,         // i_data hợp lệ khi bằng 1
     input  logic [BIT_LENGTH_WIDTH-1:0]  i_bit_length,
-    input  logic [DATA_WIDTH-1:0]  i_data,           // word data từ bên ngoài
+    input  logic [DATA_WIDTH-1:0]  i_data,           // từ dữ liệu từ bên ngoài
 
     output logic         o_busy,
     output logic         o_ready,
-    output logic         o_done,   // pulse after the final digest word
-    output logic         o_valid,  // each cycle with a valid serialized word
+    output logic         o_done,   // xung sau từ digest cuối cùng
+    output logic         o_valid,  // mỗi chu kỳ có một từ tuần tự hợp lệ
     output logic         o_error,
     output logic [DATA_WIDTH-1:0] o_data
 );
 
     // =========================================================
-    // 1. Khai báo wire nội bộ
+    // 1. Khai báo dây tín hiệu nội bộ
     // =========================================================
 
-    // ----- block_buffer_512 -----
+    // ----- khối_buffer_512 -----
     logic                bb_start;
     logic [BLOCK_SIZE-1:0]        bb_data;
     logic                bb_done;
@@ -32,7 +32,7 @@ module sha256_controller #(
     logic                bb_ready;
     logic                bb_block_ready;
 
-    // ----- message_schedule_generator -----
+    // ----- bộ tạo lịch thông điệp -----
     logic                msg_enable;
     logic [BLOCK_SIZE-1:0]        msg_i_data;
     logic                msg_done;
@@ -57,7 +57,7 @@ module sha256_controller #(
     logic                dig_done;
 
     // =========================================================
-    // 2. Instantiation các khối
+    // 2. Khởi tạo các khối
     // =========================================================
 
     block_buffer_512 #(
@@ -124,8 +124,8 @@ module sha256_controller #(
     // =========================================================
 
     assign msg_i_data = bb_data;
-    // Compression starts on i_enable and consumes W[0] one cycle later.
-    // Delay the schedule stream so round 0 receives W[0], not W[1].
+    // Khối nén bắt đầu khi i_enable được bật và tiêu thụ W[0] sau một chu kỳ.
+    // Làm trễ luồng lịch để vòng 0 nhận W[0], không phải W[1].
     assign cmp_i_data = msg_data_d;
 
     assign dig_i_data = {
@@ -136,26 +136,26 @@ module sha256_controller #(
     assign o_data       = dig_o_data;
 
     // =========================================================
-    // 4. FSM
+    // 4. Máy trạng thái hữu hạn
     // =========================================================
 
     typedef enum logic [2:0] {
         IDLE,
-        WAIT_BLOCK,   // block buffer giữ nguyên block đến khi được acknowledge
-        INIT,         // pulse msg_enable + chờ msg_valid
-        COMPRESS,         // đang chạy 64 round
-        CHECK_NEXT,       // kiểm tra còn block tiếp theo không
-        OUTPUT_DIGEST     // xuất digest thành các word 32-bit
+        WAIT_BLOCK,   // khối buffer giữ nguyên khối đến khi được xác nhận
+        INIT,         // xung msg_enable + chờ msg_hợp lệ
+        COMPRESS,         // đang chạy 64 vòng
+        CHECK_NEXT,       // kiểm tra còn khối tiếp theo không
+        OUTPUT_DIGEST     // xuất digest thành các từ 32 bit
     } state_t;
 
     state_t state, nextstate;
 
     logic first_block;      // =1 → cần assert cmp_init
-    logic msg_enable_r;     // để tạo pulse 1 cycle
+    logic msg_enable_r;     // để tạo xung 1 chu kỳ
     logic error_r;
 
     // ---------------------------------------------------------
-    // Next-state logic
+    // Logic trạng thái kế tiếp
     // ---------------------------------------------------------
     always_comb begin
         nextstate = state;
@@ -174,7 +174,7 @@ module sha256_controller #(
             end
 
             INIT: begin
-                if (msg_valid)              // message schedule bắt đầu xuất W[0]
+                if (msg_valid)              // bộ tạo lịch bắt đầu xuất W[0]
                     nextstate = COMPRESS;
             end
 
@@ -197,7 +197,7 @@ module sha256_controller #(
     end
 
     // ---------------------------------------------------------
-    // Sequential
+    // Logic tuần tự
     // ---------------------------------------------------------
     always_ff @(posedge i_clk) begin
         if (!i_rst_n) begin
@@ -211,14 +211,14 @@ module sha256_controller #(
             state <= nextstate;
             msg_data_d <= msg_data;
 
-            // Latch an invalid start request for software/debug visibility.
+            // Lưu yêu cầu bắt đầu không hợp lệ để phần mềm/gỡ lỗi có thể quan sát.
             if (i_start && (state != IDLE))
                 error_r <= 1'b1;
 
-            // Ghi nhận đã phát msg_enable cho block hiện tại.
+            // Ghi nhận đã phát msg_enable cho khối hiện tại.
             msg_enable_r <= (state == INIT) && bb_done;
 
-            // Quản lý first_block
+            // Quản lý first_khối
             if (state == IDLE && i_start)
                 first_block <= 1'b1;
             else if (msg_enable)
@@ -227,21 +227,21 @@ module sha256_controller #(
     end
 
     // ---------------------------------------------------------
-    // Control signals
+    // Các tín hiệu điều khiển
     // ---------------------------------------------------------
 
-    // Block buffer
+    // Bộ đệm khối
     assign bb_start       = (state == IDLE) && i_start;
     assign bb_block_ready = (state == CHECK_NEXT);
 
-    // Message schedule: pulse đúng 1 cycle khi block đã sẵn sàng.
+    // Bộ tạo lịch thông điệp: xung đúng một chu kỳ khi khối đã sẵn sàng.
     assign msg_enable = (state == INIT) && bb_done && !msg_enable_r;
 
-    // Compression
-    assign cmp_init   = msg_enable && first_block;          // chỉ block đầu tiên
+    // Khối nén
+    assign cmp_init   = msg_enable && first_block;          // chỉ khối đầu tiên
     assign cmp_enable = (state == INIT) && msg_valid;  // đúng lúc W[0] xuất hiện
 
-    // Status ra ngoài
+    // Trạng thái đầu ra
     assign o_busy = (state != IDLE);
     assign o_ready = (state == IDLE) || ((state == WAIT_BLOCK) && bb_ready);
     assign dig_load = (state == WAIT_BLOCK) && !bb_busy;

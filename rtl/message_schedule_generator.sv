@@ -64,7 +64,7 @@ module message_schedule_generator #(
             case (state)
                 IDLE: begin
                     if (i_enable) begin
-                        // Load the initial 16 words (MSB-first).
+                        // Nạp 16 từ ban đầu (bit có trọng số cao nhất trước).
                         for (int i = 0; i < WORD_COUNT; i++) begin
                             W[i] <= i_data[BLOCK_SIZE-1-i*DATA_WIDTH -: DATA_WIDTH];
                         end
@@ -75,7 +75,7 @@ module message_schedule_generator #(
                 end
 
                 EXPAND: begin
-                    // Generate W[16] through W[63].
+                    // Tạo các từ W[16] đến W[63].
                     W[count] <= W[count-16] + sigma0(W[count-15]) + W[count-7] + sigma1(W[count-2]);
 
                     if (count == 6'd63) begin
